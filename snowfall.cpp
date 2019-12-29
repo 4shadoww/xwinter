@@ -50,6 +50,11 @@ void sky::set_x_spawn_intensity(int intensity){
     this->x_spawn_intensity = intensity;
 }
 
+void sky::set_size(unsigned int min, unsigned int max){
+    this->min_size = min;
+    this->max_size = max;
+}
+
 float sky::get_random_float(float min, float max) {
     return ((float)rand() / RAND_MAX) * (max - min) + min;
 }
@@ -104,7 +109,7 @@ void sky::create_sky(){
         this->positions[i][0] = temp_pair.first;
         this->positions[i][1] = temp_pair.second;
         // Set random size
-        temp_int = sky::get_random_size(2, 4);
+        temp_int = sky::get_random_size(this->min_size, this->max_size);
         this->snowflakes[i].height = temp_int;
         this->snowflakes[i].width = temp_int;
         // Set random speed
@@ -185,17 +190,17 @@ int main(int argc, char** argv){
     unsigned int size = 2;
     unsigned int random_size = 2;
 
-    // Parse arguments
+    // Chech is help asked to be printed
     if(argc > 1 && strcmp(argv[1], "-h") == 0){
         print_usage(argv[0]);
         return 0;
     }
-
+    // Check is argument count correct
     if(argc % 2 == 1){
         std::cerr << "error: invalid argument count" << std::endl;
         return 1;
     }
-
+    // Parse arguments
     for(int i = 1; i < argc - 1; i++){
         // Particle count
         if(strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--count") == 0){
