@@ -4,9 +4,9 @@
 
 struct flakespeed{
     //! Speed in x axis
-    int speed_x = 0;
+    float speed_x = 0.f;
     //! Speed in y axis
-    int speed_y = 0;
+    float speed_y = 0.f;
 
     //! Default constructor
     flakespeed(){}
@@ -23,6 +23,22 @@ private:
     unsigned int screen_width = 0;
     //! Screen heigth
     unsigned int screen_heigth = 0;
+    //! Particle count
+    unsigned int particle_count = 500;
+    //! Min speed x
+    float min_speed_x = 20.f;
+    //! Max speed x
+    float max_speed_x = 40.f;
+    //! Min speed y
+    float min_speed_y = 20.f;
+    //! Max speed y
+    float max_speed_y = 40.f;
+    //! X-spawn intensity
+    int x_spawn_intensity = 3;
+    //! Min size
+    unsigned int min_size = 2;
+    //! Max size
+    unsigned int max_size = 4;
     //! Random number from device
     std::random_device rd;
     //! Generator
@@ -30,24 +46,38 @@ private:
 
 public:
     //! Snowflakes
-    XRectangle* snowflakes;
+    XRectangle* snowflakes = nullptr;
+    //! Snowflake positions
+    float** positions = nullptr;
     //! Snowflake speeds
-    flakespeed* snowflakespeeds;
-    //! Flake count
-    unsigned int flake_count = 0;
+    flakespeed* snowflakespeeds = nullptr;
 
     //! Constructor
-    sky(unsigned int screen_width, unsigned int screen_heigth, unsigned int flake_count);
+    sky(unsigned int screen_width, unsigned int screen_heigth);
+    //! Destructor
+    ~sky();
+    //! Free reserved memory
+    void free_memory();
     //! Set screen size
     void set_screen_size(unsigned int screen_width, unsigned int screen_heigth);
+    //! Set flake count
+    void set_count(unsigned int count);
+    //! Set speed
+    void set_speed(float min_x, float max_x, float min_y, float max_y);
+    //! Set x-spawn intensity
+    void set_x_spawn_intensity(int intensity);
+    //! Set size
+    void set_size(unsigned int min, unsigned int max);
+    //! Get random float
+    float get_random_float(float min, float max);
     //! Get randomised position
     std::pair<int, int> get_random_position(int min_x, int max_x, int min_y, int max_y);
     //! Get randomised speed
-    std::pair<int, int> get_random_speed(int min_x, int max_x, int min_y, int max_y);
+    std::pair<float, float> get_random_speed(float min_x, float max_x, float min_y, float max_y);
     //! Get randomised size
     int get_random_size(int min, int max);
     //! Create randomised sky
-    void create_sky(unsigned int flake_count);
+    void create_sky();
     //! Update flake positions
     void update();
 };
