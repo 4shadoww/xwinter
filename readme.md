@@ -1,6 +1,6 @@
 xwinter
 =======
-xwinter is a simple program which creates snowing animated background.
+xwinter is a simple program which creates snowing animated background. DISCLAIMER: not currently working on other than i3-gaps and confirmed not to be working on gnome and budgie. 
 
 ![Alt Text](https://media.giphy.com/media/RMrKaMyrkFYB3qgWgo/giphy.gif)
 
