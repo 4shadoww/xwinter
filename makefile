@@ -1,9 +1,9 @@
-EXECUTABLE=snowfall
+EXECUTABLE=xwinter
 CC=g++
 CFLAGS=-Wall -O3
-LIBS=-lxcb -lxcb-ewmh -lcairo -lX11 -lXext
+LIBS=-lX11
 
 all: main
 
-main: snowfall.cpp
-	$(CC) snowfall.cpp $(CFLAGS) $(LIBS) -o $(EXECUTABLE)
+main: xwinter.cpp
+	$(CC) xwinter.cpp $(CFLAGS) $(LIBS) -o $(EXECUTABLE)

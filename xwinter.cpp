@@ -1,12 +1,32 @@
+/*
+  Copyright (C) 2019 Noa-Emil Nissinen
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.    If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include <iostream>
+
 #include <unistd.h>
 #include <string.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#include "snowfall.hpp"
+#include "xwinter.hpp"
 
+
+std::string version = "1.0";
 
 sky::sky(unsigned int screen_width, unsigned int screen_heigth){
     // Set screen size
@@ -119,7 +139,7 @@ void sky::create_sky(){
     }
 }
 
-void sky::update(){
+void sky::update(float delta){
     // Temp variables
     std::pair<int, int> temp_pair;
     // Spawm flake positions
@@ -128,8 +148,8 @@ void sky::update(){
     // Loop
     for(unsigned int i = 0; i < this->particle_count; i++){
         // Update position
-        this->positions[i][0] += this->snowflakespeeds[i].speed_x / 10.f;
-        this->positions[i][1] += this->snowflakespeeds[i].speed_y / 10.f;
+        this->positions[i][0] += this->snowflakespeeds[i].speed_x / 100.f * (delta);
+        this->positions[i][1] += this->snowflakespeeds[i].speed_y / 100.f * (delta);
         this->snowflakes[i].x = this->positions[i][0];
         this->snowflakes[i].y = this->positions[i][1];
 
@@ -164,39 +184,61 @@ void sky::update(){
     }
 }
 
+void print_copyright(){
+    std::cout << "xwinter " << version << std::endl;
+    std::cout << R"(Copyright (C) 2019 Noa-Emil Nissinen
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.)" << std::endl;
+}
+
+void print_version(){
+    std::cout << "xwinter " << version << std::endl;
+}
+
 void print_usage(std::string path){
     std::cout << "usage: " + path + " [options]" << std::endl;
     std::cout << R"(Options:
-  -c, --count         Set particle count
-  -sx, --speed-x      Set speed on X-axis
-  -sy, --speed-y      Set speed on Y-axis
-  -cl, --color        Set particle color {white|blue|red|green}
-  -rx, --random-x     Set randomness on speed on X-axis
-  -ry, --random-y     Set randomness on speed on Y-axis
-  -ys, --y-spawn      Set particle spawn intensity on X-axis
-  -s, --size          Set particle size
-  -rs, --random-size  Set randomness to size)" << std::endl;
+  -h, --help                                  Print this message
+  -v, --version                               Print version info
+  -c, --count <int>                           Set particle count
+  -sx, --speed-x <float>                      Set speed on X-axis
+  -sy, --speed-y <float>                      Set speed on Y-axis
+  -cl, --color {white|blue|red|green}         Set particle color
+  -rx, --random-x <float>                     Set randomness on speed on X-axis
+  -ry, --random-y <float>                     Set randomness on speed on Y-axis
+  -ys, --y-spawn <int>                        Set particle spawn intensity on X-axis
+  -s, --size <int>                            Set particle size
+  -rs, --random-size <int>                    Set randomness to size
+  -fps, --frame-rate <int>                    Set target framerate)" << std::endl;
 }
 
 int main(int argc, char** argv){
     // Settings
-    unsigned int count = 500;
-    float speed_x = 20.f;
-    float speed_y = 20.f;
+    unsigned int count = 200;
+    float speed_x = 30.f;
+    float speed_y = 30.f;
     std::string particle_color = "white";
     float random_x = 20.f;
     float random_y = 20.f;
-    int y_spawn = 3;
+    int x_spawn = 1;
     unsigned int size = 2;
     unsigned int random_size = 2;
+    unsigned int fps = 144;
 
     // Chech is help asked to be printed
-    if(argc > 1 && strcmp(argv[1], "-h") == 0){
+    if(argc > 1 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)){
         print_usage(argv[0]);
         return 0;
     }
+    // Chech is version asked to be printed
+    if(argc > 1 && (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)){
+        print_version();
+        return 0;
+    }
+
     // Check is argument count correct
-    if(argc % 2 == 1){
+    if(argc % 2 == 0 || argc == 2){
         std::cerr << "error: invalid argument count" << std::endl;
         return 1;
     }
@@ -235,7 +277,7 @@ int main(int argc, char** argv){
         // Spawn y
         }else if(strcmp(argv[i], "-xs") == 0 || strcmp(argv[i], "--x-spawn") == 0){
             i++;
-            y_spawn = std::atoi(argv[i]);
+            x_spawn = std::atoi(argv[i]);
             continue;
         // Size
         }else if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--size") == 0){
@@ -247,11 +289,22 @@ int main(int argc, char** argv){
             i++;
             random_size = std::stoul(argv[i]);
             continue;
+        // Framerate
+        }else if(strcmp(argv[i], "-fps") == 0 || strcmp(argv[i], "--frame-rate") == 0){
+            i++;
+            fps = std::stoul(argv[i]);
+            continue;
         }else{
             std::cerr << "error: unknown argument \"" << argv[i] << "\"" << std::endl;
             return 1;
         }
     }
+
+    // Tick
+    float tick = 1000 / fps;
+
+    // Print license
+    print_copyright();
 
     // Init xorg
     Display* display = XOpenDisplay (NULL);
@@ -302,15 +355,18 @@ int main(int argc, char** argv){
     sky skyen(width, heigth);
     skyen.set_count(count);
     skyen.set_speed(speed_x, speed_x + random_x, speed_y, speed_y + random_y);
-    skyen.set_x_spawn_intensity(y_spawn);
+    skyen.set_x_spawn_intensity(x_spawn);
+    skyen.set_size(size, size + random_size);
     skyen.create_sky();
 
     while(true){
-        usleep(1000*1000/144);
+        // Draw
         XFillRectangles(display, window, gc, skyen.snowflakes, count);
         XFlush(display);
         XClearWindow(display, window);
-        skyen.update();
+        // Update sky
+        skyen.update(tick);
+        usleep(1000000 / fps);
     }
 
     return 0;
