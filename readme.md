@@ -2,6 +2,8 @@ xwinter
 =======
 xwinter is a simple program which creates snowing animated background.
 
+![Alt Text](https://media.giphy.com/media/RMrKaMyrkFYB3qgWgo/giphy.gif)
+
 Dependencies
 ============
 Requires X11 i.e. Xorg.
