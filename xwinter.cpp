@@ -26,7 +26,7 @@
 #include "xwinter.hpp"
 
 
-std::string version = "1.0";
+std::string version = "1.1";
 
 sky::sky(unsigned int screen_width, unsigned int screen_heigth){
     // Set screen size
@@ -308,6 +308,7 @@ int main(int argc, char** argv){
 
     // Init xorg
     Display* display = XOpenDisplay (NULL);
+    Window defaultroot = DefaultRootWindow(display);
     XVisualInfo vinfo;
     XMatchVisualInfo(display, DefaultScreen(display), 32, TrueColor, &vinfo);
     Screen* screen = XDefaultScreenOfDisplay(display);
@@ -316,20 +317,25 @@ int main(int argc, char** argv){
     XColor xcolor;
 
     // Get screen width and heigth
-    unsigned int width = XWidthOfScreen(screen);
-    unsigned int heigth = XHeightOfScreen(screen);
+    int width = XWidthOfScreen(screen);
+    int height = XHeightOfScreen(screen);
     // Set window attributes
     XSetWindowAttributes attr;
     attr.override_redirect = 1;
-    attr.colormap = XCreateColormap(display, DefaultRootWindow(display), vinfo.visual, AllocNone);
+    attr.colormap = XCreateColormap(display, defaultroot, vinfo.visual, AllocNone);
     attr.border_pixel = 0;
     attr.background_pixel = 0;
     // Create window
-    Window window = XCreateWindow(display, DefaultRootWindow(display), 0, 0, width, heigth, 0, vinfo.depth, InputOutput, vinfo.visual, CWColormap | CWBorderPixel | CWBackPixel | CWOverrideRedirect, &attr);
+    Window window = XCreateWindow(display, defaultroot, 0, 0, width, height, 0, vinfo.depth, InputOutput, vinfo.visual, CWColormap | CWBorderPixel | CWBackPixel | CWOverrideRedirect, &attr);
+
+    // Event listener
+    XSelectInput(display, defaultroot, ExposureMask | StructureNotifyMask);
+
     // Move window to background
     XLowerWindow(display, window);
 
     XMapWindow(display, window);
+    XMapWindow(display, defaultroot);
     // Graphics context
     gc = XCreateGC(display, window, 0, 0);
 
@@ -352,7 +358,7 @@ int main(int argc, char** argv){
     XFlush(display);
 
     // Create sky
-    sky skyen(width, heigth);
+    sky skyen(width, height);
     skyen.set_count(count);
     skyen.set_speed(speed_x, speed_x + random_x, speed_y, speed_y + random_y);
     skyen.set_x_spawn_intensity(x_spawn);
@@ -360,6 +366,21 @@ int main(int argc, char** argv){
     skyen.create_sky();
 
     while(true){
+        // Events
+        XEvent e;
+        XCheckMaskEvent(display, ExposureMask | StructureNotifyMask, &e);
+        // Resize window
+        if (e.type == ConfigureNotify){
+            XConfigureEvent xce = e.xconfigure;
+
+            if(width != xce.width || height != xce.height){
+                width = xce.width;
+                height = xce.height;
+
+                skyen.set_screen_size(width, height);
+                XResizeWindow(display, window, width, height);
+            }
+        }
         // Draw
         XFillRectangles(display, window, gc, skyen.snowflakes, count);
         XFlush(display);
